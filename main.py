@@ -353,7 +353,7 @@ async def process_documents(message: types.Message, state: FSMContext):
     await message.answer(TEXTS[lang]["doc_accepted"].format(len(uploaded_files)), reply_markup=keyboard)
 
 
-# --- НАДЁЖНЫЙ ЗАПУСК ---
+# --- НАДЁЖНЫЙ ОТЛАДОЧНЫЙ ЗАПУСК ---
 async def main():
     print("Попытка запуска двуязычного бота Oxford School...")
     try:
@@ -361,7 +361,7 @@ async def main():
         print(f"✅ Успешное подключение к серверам Telegram!")
         print(f"Имя вашего бота в сети: @{bot_user.username}")
         print("--------------------------------------------------")
-        print("Бот запущен и ожидает сообщений.")
+        print("Бот запущен и ожидает сообщений. НЕ ЗАКРЫВАЙТЕ это окно!")
         await dp.start_polling(bot)
     except Exception as e:
         print("\n❌ ПРОИЗОШЛА ОШИБКА ПРИ СВЯЗИ С TELEGRAM:")
