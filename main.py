@@ -18,13 +18,15 @@ dp = Dispatcher()
 # Укажите ваш Telegram ID внутри скобок для доступа к команде /export (узнать в @userinfobot)
 ADMIN_IDS = []  
 
-# Путь для сохранения документов строго на диске E
-DOCS_DIR = r"E:\MyBotForOIS\school_documents"
+# Относительный путь для сохранения документов (работает и на Windows, и на Render/Linux)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DOCS_DIR = os.path.join(BASE_DIR, "school_documents")
 if not os.path.exists(DOCS_DIR):
-    os.makedirs(DOCS_DIR)
+    os.makedirs(DOCS_DIR, exist_ok=True)
 
-# База данных строго на диске E
-conn = sqlite3.connect(r'E:\MyBotForOIS\oxford_registration.db')
+# База данных (в папке с проектом)
+db_path = os.path.join(BASE_DIR, "oxford_registration.db")
+conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS applicants (
@@ -68,9 +70,9 @@ TEXTS = {
             "• **Официальный перевод табелей от юридической фирмы / нотариуса**\n"
             "• **Нострификация аттестата из местного ГорОНО Узбекистана** (обязательно)"
         ),
-        "docs_footer": "\n\nПожалуйста, **отправьте файлы или фотографии** этих документов одним или несколькими сообщениями. Как только закончите отправку, напишите слово **Готово**.",
-        "doc_empty_error": "⚠️ Вы не отправили ни одного документа. Отправьте photo/файлы, а затем напишите 'Готово'.",
-        "doc_accepted": "✅ Документ принят (загружено {}). Отправьте следующий или напишите **Готово**.",
+        "docs_footer": "\n\nПожалуйста, **отправьте файлы или фотографии** этих документов одним или несколькими сообщениями. Как только закончите отправку, нажмите на кнопку **Готово**.",
+        "doc_empty_error": "⚠️ Вы не отправили ни одного документа. Отправьте photo/файлы, а затем нажмите на кнопку 'Готово'.",
+        "doc_accepted": "✅ Документ принят (загружено {}). Отправьте следующий или нажмите на кнопку **Готово**.",
         "success": "🎉 **Заявка в Oxford International School принята!**\n\n• **Ученик:** {}\n• **Класс обучения:** {}\n• **Загружено документов:** {} шт.\n\nПриемная комиссия проверит документы и свяжется с вами."
     },
     "uz": {
@@ -96,9 +98,9 @@ TEXTS = {
             "• **Yuridik firma yoki notarius tomonidan tabel tarjimasi**\n"
             "• **O'zbekiston hududiy xalq ta'limi (GorONO) tomonidan berilgan attestatni nostrifikatsiya qilish hujjati** (majburiy)"
         ),
-        "docs_footer": "\n\nHujjatlarning **shaffof rasmini yoki faylini** bitta yoki bir nechta xabar qilib yuboring. Yuborib bo'lgach, **Tayyor** so'zini yozing.",
-        "doc_empty_error": "⚠️ Siz bitta ham hujjat yubormadingiz. Hujjatlarni yuboring va keyin 'Tayyor' deb yozing.",
-        "doc_accepted": "✅ Hujjat qabul qilindi ({} ta yuklandi). Keyingisini yuboring yoki **Tayyor** deb yozing.",
+        "docs_footer": "\n\nHujjatlarning **shaffof rasmini yoki faylini** bitta yoki bir nechta xabar qilib yuboring. Yuborib bo'lgach, **Tayyor** tugmasini bosing.",
+        "doc_empty_error": "⚠️ Siz bitta ham hujjat yubormadingiz. Hujjatlarni yuboring va keyin 'Tayyor' tugmasini bosing.",
+        "doc_accepted": "✅ Hujjat qabul qilindi ({} ta yuklandi). Keyingisini yuboring yoki **Tayyor** tugmasini bosing.",
         "success": "🎉 **Oxford International School-ga ariza qabul qilindi!**\n\n• **O'quvchi:** {}\n• **Sinf:** {}\n• **Yuklangan hujjatlar:** {} ta.\n\nQabul komissiyasi hujjatlarni tekshirib, siz bilan bog'lanadi."
     }
 }
@@ -114,6 +116,7 @@ class Registration(StatesGroup):
     waiting_for_local_school = State()   
     waiting_for_abroad_details = State() 
     waiting_for_documents = State()      
+
 # --- ЛОГИКА РЕГИСТРАЦИИ ---
 
 @dp.message(Command("start"))
@@ -186,7 +189,6 @@ async def process_phone(message: types.Message, state: FSMContext):
     phone = message.contact.phone_number if message.contact else message.text
     await state.update_data(phone=phone)
     
-        # ЛОГИКА ДЛЯ 1 КЛАССА (С поддержкой узбекского языка и кнопок)
     if grade == 1:
         if lang == "ru":
             kb = [
@@ -205,7 +207,6 @@ async def process_phone(message: types.Message, state: FSMContext):
         await message.answer(msg_ask, reply_markup=keyboard)
         await state.set_state(Registration.waiting_for_school_type)
 
-    # ЛОГИКА ДЛЯ ОСТАЛЬНЫХ КЛАССОВ (2-11)
     else:
         kb = [
             [types.KeyboardButton(text=TEXTS[lang]["btn_local"])],
@@ -222,7 +223,6 @@ async def process_school_type(message: types.Message, state: FSMContext):
     lang = data['lang_code']
     grade = int(data['grade'])
     
-    # Расширяем списки кнопок новыми узбекскими вариантами для 1 класса
     abroad_buttons = [TEXTS["ru"]["btn_abroad"], TEXTS["uz"]["btn_abroad"], "🌍 Прибыл из-за границы", "🌍 Chet eldan kelgan"]
     local_buttons = [TEXTS["ru"]["btn_local"], TEXTS["uz"]["btn_local"], "🇺🇿 Проживал в Узбекистане", "🇺🇿 O'zbekistonda yashagan"]
     
@@ -281,22 +281,20 @@ async def send_document_request(message: types.Message, state: FSMContext):
 
     msg_text += TEXTS[lang]["docs_footer"]
     
-    # 🌟 СОЗДАЕМ КНОПКУ "ГОТОВО" НА НУЖНОМ ЯЗЫКЕ 🌟
     btn_text = "✅ Готово" if lang == "ru" else "✅ Tayyor"
     kb = [[types.KeyboardButton(text=btn_text)]]
     keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
     
-    # Добавили reply_markup=keyboard в отправку сообщения
     await message.answer(msg_text, reply_markup=keyboard)
     await state.update_data(uploaded_files=[])  
     await state.set_state(Registration.waiting_for_documents)
+
 
 @dp.message(Registration.waiting_for_documents)
 async def process_documents(message: types.Message, state: FSMContext):
     data = await state.get_data()
     lang = data['lang_code']
     
-    # 🌟 ПРОВЕРКА КНОПКИ (ищет слова "готово" или "tayyor" даже с эмодзи) 🌟
     if message.text and any(word in message.text.strip().lower() for word in ["готово", "tayyor"]):
         user_data = await state.get_data()
         files_list = user_data.get('uploaded_files', [])
@@ -317,7 +315,6 @@ async def process_documents(message: types.Message, state: FSMContext):
         conn.commit()
         await state.clear()
 
-        # 🌟 УДАЛЯЕМ КНОПКУ ПОСЛЕ УСПЕШНОГО ЗАВЕРШЕНИЯ 🌟
         await message.answer(
             TEXTS[lang]["success"].format(user_data['fullname'], user_data['grade'], len(files_list)),
             reply_markup=types.ReplyKeyboardRemove()
@@ -334,7 +331,6 @@ async def process_documents(message: types.Message, state: FSMContext):
         file_id = message.document.file_id
         orig_name = message.document.file_name
     else:
-        # Если пользователь просто прислал текст (не кнопку), напоминаем инструкцию и оставляем кнопку
         btn_text = "✅ Готово" if lang == "ru" else "✅ Tayyor"
         kb = [[types.KeyboardButton(text=btn_text)]]
         keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
@@ -350,7 +346,6 @@ async def process_documents(message: types.Message, state: FSMContext):
     uploaded_files.append(file_path)
     await state.update_data(uploaded_files=uploaded_files)
 
-    # 🌟 ВОЗВРАЩАЕМ КНОПКУ вместе со статусом "Документ принят" 🌟
     btn_text = "✅ Готово" if lang == "ru" else "✅ Tayyor"
     kb = [[types.KeyboardButton(text=btn_text)]]
     keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
@@ -358,11 +353,7 @@ async def process_documents(message: types.Message, state: FSMContext):
     await message.answer(TEXTS[lang]["doc_accepted"].format(len(uploaded_files)), reply_markup=keyboard)
 
 
-# --- НАДЁЖНЫЙ ОТЛАДОЧНЫЙ ЗАПУСК ---
-async def main():
-    print("Попытка запуска двуязычного бота Oxford School...")
-   
-# --- НАДЁЖНЫЙ ОТЛАДОЧНЫЙ ЗАПУСК ---
+# --- НАДЁЖНЫЙ ЗАПУСК ---
 async def main():
     print("Попытка запуска двуязычного бота Oxford School...")
     try:
@@ -370,7 +361,7 @@ async def main():
         print(f"✅ Успешное подключение к серверам Telegram!")
         print(f"Имя вашего бота в сети: @{bot_user.username}")
         print("--------------------------------------------------")
-        print("Бот запущен и ожидает сообщений. НЕ ЗАКРЫВАЙТЕ это окно!")
+        print("Бот запущен и ожидает сообщений.")
         await dp.start_polling(bot)
     except Exception as e:
         print("\n❌ ПРОИЗОШЛА ОШИБКА ПРИ СВЯЗИ С TELEGRAM:")
