@@ -10,18 +10,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import FSInputFile
 
-import os
-from dotenv import load_dotenv
-
-# Загружаем настройки из скрытой среды
-load_dotenv()
-
-# Получаем токен
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-
-# Дальше идет ваш привычный код бота...
-# bot = TeleBot(BOT_TOKEN)
-
+# --- НАСТРОЙКА БОТА И БАЗЫ ДАННЫХ ---
+API_TOKEN = '5762798532:AAGxAutHouyZI6BDdlbDsf9HWyqFM6dQpVw'
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher()
 
 # Укажите ваш Telegram ID внутри скобок для доступа к команде /export (узнать в @userinfobot)
 ADMIN_IDS = []  
@@ -76,9 +68,9 @@ TEXTS = {
             "• **Официальный перевод табелей от юридической фирмы / нотариуса**\n"
             "• **Нострификация аттестата из местного ГорОНО Узбекистана** (обязательно)"
         ),
-        "docs_footer": "\n\nПожалуйста, **отправьте файлы или фотографии** этих документов одним или несколькими сообщениями. Как только закончите отправку, нажмите на кнопку **Готово**.",
-        "doc_empty_error": "⚠️ Вы не отправили ни одного документа. Отправьте photo/файлы, а затем нажмите на кнопку 'Готово'.",
-        "doc_accepted": "✅ Документ принят (загружено {}). Отправьте следующий или нажмите на кнопку **Готово**.",
+        "docs_footer": "\n\nПожалуйста, **отправьте файлы или фотографии** этих документов одним или несколькими сообщениями. Как только закончите отправку, напишите слово **Готово**.",
+        "doc_empty_error": "⚠️ Вы не отправили ни одного документа. Отправьте photo/файлы, а затем напишите 'Готово'.",
+        "doc_accepted": "✅ Документ принят (загружено {}). Отправьте следующий или напишите **Готово**.",
         "success": "🎉 **Заявка в Oxford International School принята!**\n\n• **Ученик:** {}\n• **Класс обучения:** {}\n• **Загружено документов:** {} шт.\n\nПриемная комиссия проверит документы и свяжется с вами."
     },
     "uz": {
@@ -104,9 +96,9 @@ TEXTS = {
             "• **Yuridik firma yoki notarius tomonidan tabel tarjimasi**\n"
             "• **O'zbekiston hududiy xalq ta'limi (GorONO) tomonidan berilgan attestatni nostrifikatsiya qilish hujjati** (majburiy)"
         ),
-        "docs_footer": "\n\nHujjatlarning **shaffof rasmini yoki faylini** bitta yoki bir nechta xabar qilib yuboring. Yuborib bo'lgach, **Tayyor** tugmasiga bosing.",
-        "doc_empty_error": "⚠️ Siz bitta ham hujjat yubormadingiz. Hujjatlarni yuboring va keyin 'Tayyor' tugmasiga bosing.",
-        "doc_accepted": "✅ Hujjat qabul qilindi ({} ta yuklandi). Keyingisini yuboring yoki **Tayyor** tugmasiga bosing.",
+        "docs_footer": "\n\nHujjatlarning **shaffof rasmini yoki faylini** bitta yoki bir nechta xabar qilib yuboring. Yuborib bo'lgach, **Tayyor** so'zini yozing.",
+        "doc_empty_error": "⚠️ Siz bitta ham hujjat yubormadingiz. Hujjatlarni yuboring va keyin 'Tayyor' deb yozing.",
+        "doc_accepted": "✅ Hujjat qabul qilindi ({} ta yuklandi). Keyingisini yuboring yoki **Tayyor** deb yozing.",
         "success": "🎉 **Oxford International School-ga ariza qabul qilindi!**\n\n• **O'quvchi:** {}\n• **Sinf:** {}\n• **Yuklangan hujjatlar:** {} ta.\n\nQabul komissiyasi hujjatlarni tekshirib, siz bilan bog'lanadi."
     }
 }
