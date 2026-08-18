@@ -159,7 +159,6 @@ async def process_name(message: types.Message, state: FSMContext):
     await message.answer(TEXTS[data['lang_code']]["ask_grade"])
     await state.set_state(Registration.waiting_for_grade)
 
-
 @dp.message(Registration.waiting_for_grade)
 async def process_grade(message: types.Message, state: FSMContext):
     data = await state.get_data()
@@ -178,7 +177,6 @@ async def process_grade(message: types.Message, state: FSMContext):
     
     await message.answer(TEXTS[lang]["ask_phone"], reply_markup=keyboard)
     await state.set_state(Registration.waiting_for_phone)
-
 
 @dp.message(Registration.waiting_for_phone)
 async def process_phone(message: types.Message, state: FSMContext):
