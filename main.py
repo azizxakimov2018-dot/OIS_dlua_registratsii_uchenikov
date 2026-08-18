@@ -10,10 +10,18 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import FSInputFile
 
-# --- НАСТРОЙКА БОТА И БАЗЫ ДАННЫХ ---
-API_TOKEN = '5762798532:AAGxAutHouyZI6BDdlbDsf9HWyqFM6dQpVw'
-bot = Bot(token=API_TOKEN)
-dp = Dispatcher()
+import os
+from dotenv import load_dotenv
+
+# Загружаем настройки из скрытой среды
+load_dotenv()
+
+# Получаем токен
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+# Дальше идет ваш привычный код бота...
+# bot = TeleBot(BOT_TOKEN)
+
 
 # Укажите ваш Telegram ID внутри скобок для доступа к команде /export (узнать в @userinfobot)
 ADMIN_IDS = []  
