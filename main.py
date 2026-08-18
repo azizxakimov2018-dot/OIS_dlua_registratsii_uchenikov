@@ -131,8 +131,7 @@ async def cmd_start(message: types.Message, state: FSMContext):
         "🏫 **Добро пожаловать в систему регистрации Oxford International School!**\n"
         "🏫 **Oxford International School ro'yxatdan o'tish tizimiga xush kelibsiz!**\n\n"
         "Пожалуйста, выберите язык обучения / Iltimos, ta'lim tilini tanlang:", 
-        reply_markup=keyboard
-    )
+        reply_markup=keyboard)
     await state.set_state(Registration.waiting_for_language)
 
 
